@@ -1,13 +1,15 @@
 from flask import (
         Flask,
         request
-        )
+    )
+from flask_cors import CORS
 from yahoo_image import search
 
 HTTP_OK = 200
 HTTP_ERR = 404
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route("/", methods=["GET"])
 def welcome():
