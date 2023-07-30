@@ -5,6 +5,7 @@ from flask import (
 from flask_cors import CORS
 from yahoo_image import search
 from otaku_news import otakunews
+from shako_module import Shako
 
 HTTP_OK = 200
 HTTP_ERR = 404
@@ -34,6 +35,40 @@ def image_yahoo():
             "status_code": HTTP_ERR,
             "result": query
             }
+            
+# Shako api
+@app.route("/shako/chat", methods=["post"])
+async def shako():
+  try:
+    data = request.json
+    prompt = data.get("prompt")
+    history = data.get("history", [])
+    chat_id = data.get("chat_id", None)
+    
+    if not prompt or not data:
+      return {
+        "status_code": HTTP_ERR,
+        "message": "invalid request. missing prompt on body request"
+      }
+    else:
+      
+      shako = Shako(prompt, history, chat_id)
+      resolve, chat_id = await shako.resolve()
+      return {
+        "status_code": HTTP_OK,
+        "responses": [
+          {
+            "chat_id": chat_id,
+            "resolve": [resolve]
+          }
+        ]
+      }
+  except Exception as error:
+    print(error)
+    return {
+      "status_code": HTTP_ERR,
+      "message": "Failed resolve request"
+    }
 
 # Otaku News
 @app.route("/news/otaku",methods=["GET"])
