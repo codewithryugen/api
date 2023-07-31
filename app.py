@@ -2,7 +2,10 @@ from flask import (
         Flask,
         request
     )
+from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
+
+
 from yahoo_image import search
 from otaku_news import otakunews
 from shako_module import Shako
@@ -14,6 +17,23 @@ HTTP_ERR_SRV = 500
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+""" 
+Setup swagger ui for documentation
+"""
+blueprint_swagger = get_swaggerui_blueprint(
+  "/docs",
+  "/static/swagger.yaml",
+  config = {
+    "app_name": "RestAPI"
+  }
+)
+
+app.register_blueprint(blueprint_swagger)
+
+""" 
+END
+"""
 
 @app.route("/", methods=["GET"])
 def welcome():
