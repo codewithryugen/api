@@ -23,7 +23,7 @@ Setup swagger ui for documentation
 """
 blueprint_swagger = get_swaggerui_blueprint(
   "/docs",
-  "/static/swagger.yaml",
+  "/static/swagger.json",
   config = {
     "app_name": "RestAPI"
   }
