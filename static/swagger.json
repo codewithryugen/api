@@ -1,0 +1,58 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "",
+    "version": "1.0.0",
+    "title": "RestAPI Documentation"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "gogoanime",
+      "description": "Gogoanime api non-official"
+    }
+  ],
+  "paths": {
+    "/gogoanime/recent": {
+      "get": {
+        "tags": ["gogoanime"],
+        "summary": "Get recent anime on this week",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/shako/chat": {
+      "post": {
+        "tags": ["gogoanime"],
+        "summary": "Get anime by name",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "requestBody",
+            "description": "Body request",
+            "required": true,
+            "schema": {
+              "required": ["query"],
+              "type": "object",
+              "properties": {
+                "prompt": {
+                  "type": "string"
+                },
+                "history": {
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
