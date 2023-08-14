@@ -1,11 +1,7 @@
-from flask import (
-        Flask,
-        request
-    )
-from flask_swagger_ui import get_swaggerui_blueprint
-from flask_cors import CORS
+import uvicorn
+from fastapi import FastAPI
 
-
+from Types import ShakoSchema
 from yahoo_image import search
 from otaku_news import otakunews
 from shako_module import Shako
@@ -15,37 +11,19 @@ HTTP_OK = 200
 HTTP_ERR = 404
 HTTP_ERR_SRV = 500
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+app = FastAPI()
 
-""" 
-Setup swagger ui for documentation
-"""
-blueprint_swagger = get_swaggerui_blueprint(
-  "/docs",
-  "/static/swagger.json",
-  config = {
-    "app_name": "RestAPI"
-  }
-)
 
-app.register_blueprint(blueprint_swagger)
-
-""" 
-END
-"""
-
-@app.route("/", methods=["GET"])
+@app.get("/")
 def welcome():
     return {
         "status_code": HTTP_OK,
         "welcome": "api image"
         }
 
-@app.route("/images/yahoo_image", methods=["GET"])
-def image_yahoo():
+@app.get("/images/yahoo_image")
+def image_yahoo(query: str):
     try:
-        query = request.args["q"]
         result = search.image(query)
         return {
             "status_code": HTTP_OK,
@@ -59,32 +37,23 @@ def image_yahoo():
             }
             
 # Shako api
-@app.route("/shako/chat", methods=["post"])
-async def shako():
+@app.post("/shako/chat")
+async def shako(data: ShakoSchema):
   try:
-    data = request.json
-    prompt = data.get("prompt")
-    history = data.get("history", [])
-    chat_id = data.get("chat_id", None)
-    
-    if not prompt or not data:
-      return {
-        "status_code": HTTP_ERR,
-        "message": "invalid request. missing prompt on body request"
-      }
-    else:
-      
-      shako = Shako(prompt, history, chat_id)
-      resolve, chat_id = await shako.resolve()
-      return {
-        "status_code": HTTP_OK,
-        "responses": [
-          {
-            "chat_id": chat_id,
-            "resolve": [resolve]
-          }
-        ]
-      }
+    prompt = data.prompt
+    history = data.history
+    chat_id = data.chat_id
+    shako = Shako(prompt, history, chat_id)
+    resolve, chat_id = await shako.resolve()
+    return {
+      "status_code": HTTP_OK,
+      "responses": [
+        {
+          "chat_id": chat_id,
+          "resolve": [resolve]
+        }
+      ]
+    }
   except Exception as error:
     print(error)
     return {
@@ -93,12 +62,11 @@ async def shako():
     }
 
 # Gogoanime api
-@app.route("/gogoanime/recent", methods=["get"])
-def gogoanime_recent():
+@app.get("/gogoanime/recent")
+def gogoanime_recent(page: str = None):
   try:
-    page = request.args.get("page", "")
     gogo = Gogoanime()
-    if page is None or page == "":
+    if not page:
       result = gogo.get_recent_release()
       return {
         "status_code": HTTP_OK,
@@ -116,16 +84,9 @@ def gogoanime_recent():
       "message": str(error)
     }
 
-@app.route("/gogoanime/search", methods=["get"])
-def gogoanime_search():
+@app.get("/gogoanime/search")
+def gogoanime_search(query: str):
     try:
-        query = request.args.get("query", "")
-        if not query:
-            return {
-                "status_code": HTTP_ERR,
-                "message": "Missing 'query' parameter. Please add 'query' in the parameters."
-            }
-
         gogo = Gogoanime()
         result = gogo.search_anime(query)
         return {
@@ -139,15 +100,9 @@ def gogoanime_search():
             "message": str(error)
         }
         
-@app.route("/gogoanime/details", methods=["get"])
-def gogoanime_details():
+@app.get("/gogoanime/details")
+def gogoanime_details(query: str):
   try:
-    query = request.args.get("query")
-    if not query:
-        return {
-          "status_code": HTTP_ERR,
-          "message": "Missing 'query' parameter. Please add 'query' in the parameters."
-        }
     gogo = Gogoanime()
     result = gogo.get_anime_details(query)
     print (result)
@@ -162,15 +117,9 @@ def gogoanime_details():
       "message": "Failed get anime data"
     }
 
-@app.route("/gogoanime/list-episode", methods=["get"])
-def gogoanime_listeps():
+@app.get("/gogoanime/list-episode")
+def gogoanime_listeps(query: str):
   try:
-    query = request.args.get("query")
-    if not query:
-        return {
-          "status_code": HTTP_ERR,
-          "message": "Missing 'query' parameter. Please add 'query' in the parameters."
-        }
     gogo = Gogoanime()
     result = gogo.get_episode_url(query)
     print (result)
@@ -185,15 +134,9 @@ def gogoanime_listeps():
       "message": "Failed get anime data"
     }
     
-@app.route("/gogoanime/stream-url", methods=["get"])
-def gogoanime_stream():
+@app.get("/gogoanime/stream-url")
+def gogoanime_stream(query: str):
   try:
-    query = request.args.get("query")
-    if not query:
-        return {
-          "status_code": HTTP_ERR,
-          "message": "Missing 'query' parameter. Please add 'query' in the parameters."
-        }
     gogo = Gogoanime()
     result = gogo.get_stream_url(query)
     print (result)
@@ -209,7 +152,7 @@ def gogoanime_stream():
     }
 
 # Otaku News
-@app.route("/news/otaku",methods=["GET"])
+@app.get("/news/otaku")
 def news_otaku():
     try:
         data = otakunews.getNews()
@@ -227,4 +170,4 @@ def news_otaku():
 pass
 
 if __name__ == "__main__":
-    app.run(debug=True, port=3000)
+  uvicorn.run("app:app", host="0.0.0.0", port=8000, log_level="info")
