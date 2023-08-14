@@ -1,5 +1,5 @@
-flask[async]
-flask-cors
+fastapi
+uvicorn
 requests
 beautifulsoup4
 websockets
@@ -8,4 +8,3 @@ cssselect
 m3u8
 yarl
 pycryptodome
-flask-swagger-ui
